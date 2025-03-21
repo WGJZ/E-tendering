@@ -33,7 +33,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import InfoIcon from '@mui/icons-material/Info';
 import { API_BASE_URL, getApiUrl } from '../api/config';
-import { publicAPI } from '../api/apiService';
+import { publicAPI, bidAPI } from '../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -350,24 +350,8 @@ const CitizenView: React.FC = () => {
   // 添加一个函数来尝试获取获奖者信息
   const fetchWinnerInfo = async (tenderId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch(getApiUrl(`/tenders/${tenderId}/bids`), {
-        headers
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch bid information');
-      }
-      
-      const bids = await response.json();
+      // Use the bidAPI service for authenticated requests
+      const bids = await bidAPI.getTenderBids(tenderId);
       const winningBid = bids.find((bid: any) => bid.is_winner);
       
       if (winningBid) {

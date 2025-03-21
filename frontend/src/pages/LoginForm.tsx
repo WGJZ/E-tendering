@@ -69,37 +69,102 @@ const LoginForm = () => {
     password: '',
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     if (!formData.username || !formData.password) {
       setError('Enter the username and password for your account');
+      setIsLoading(false);
       return;
     }
 
     try {
       console.log(`Attempting to login as ${userType} with username: ${formData.username}`);
       
+      // Make sure user_type is uppercase
+      const uppercaseUserType = userType?.toUpperCase();
+      console.log(`User type for API request: ${uppercaseUserType}`);
+      
       const loginData = await authAPI.login({
         username: formData.username,
         password: formData.password,
-        user_type: userType?.toUpperCase()
+        user_type: uppercaseUserType
       });
 
       console.log('Login successful:', loginData);
       
       localStorage.setItem('token', loginData.token);
-      localStorage.setItem('userType', loginData.user_type);
+      localStorage.setItem('userType', loginData.user_type || uppercaseUserType);
+      
       if (userType === 'city') {
         navigate('/city');
       } else if (userType === 'company') {
         navigate('/company');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      setError('Login failed. Please check your credentials and try again.');
+      // Try to extract the error message from the error object
+      let errorMessage = 'Login failed. Please check your credentials and try again.';
+      
+      if (error.message) {
+        if (error.message.includes('API request failed')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('Unauthorized')) {
+          errorMessage = 'Invalid username or password. Please try again.';
+        }
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // This is a debugging function to test the raw API call
+  const testDirectApiCall = async () => {
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      console.log('Testing direct API call with formData:', formData);
+      
+      // Try with both API URLs to ensure we're reaching the correct endpoint
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://e-tendering-backend.onrender.com/api';
+      const endpoint = `${apiUrl}/auth/login/`;
+      
+      console.log(`Sending direct request to: ${endpoint}`);
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+          user_type: userType?.toUpperCase()
+        }),
+      });
+      
+      console.log('Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (response.ok) {
+        setError('Direct API call successful. Check console for details.');
+      } else {
+        setError(`Direct API call failed: ${data.message || JSON.stringify(data)}`);
+      }
+    } catch (error) {
+      console.error('Direct API call error:', error);
+      setError(`Direct API call error: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -194,6 +259,20 @@ const LoginForm = () => {
             }}
           >
             <ButtonText>LOGIN</ButtonText>
+          </StyledButtonContainer>
+          
+          {/* Test API button - for debugging purposes */}
+          <StyledButtonContainer
+            onClick={testDirectApiCall}
+            sx={{
+              width: '100%',
+              height: '5vh',
+              minHeight: '40px',
+              bgcolor: 'rgba(190, 190, 190, 0.4)',
+              mt: 1,
+            }}
+          >
+            <ButtonText>TEST LOGIN API</ButtonText>
           </StyledButtonContainer>
           
           {/* Only show registration link for company users */}

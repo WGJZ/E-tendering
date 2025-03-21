@@ -34,11 +34,22 @@ export const apiRequest = async (endpoint: string, options: RequestOptions = {})
 
   try {
     const url = getApiUrl(endpoint);
+    console.log(`Full request URL: ${url}`);
+    
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
     });
 
+    console.log(`Response status: ${response.status}`);
+
+    // For login endpoint, handle 401 differently to show the exact error from backend
+    if (endpoint.includes('/auth/login/') && response.status === 401) {
+      const errorData = await response.json();
+      console.log(`Login failed. Server response:`, errorData);
+      throw new Error(`Login failed: ${errorData.message || 'Invalid credentials'}`);
+    }
+    
     // Handle 401 Unauthorized (e.g., expired token)
     if (response.status === 401) {
       console.log('Unauthorized access - token might be expired');
@@ -81,13 +92,15 @@ export const publicAPI = {
  * Authentication API endpoints
  */
 export const authAPI = {
-  login: (credentials: LoginCredentials) => 
-    apiRequest('/auth/login', {
+  login: (credentials: LoginCredentials) => {
+    console.log('Login request payload:', credentials);
+    return apiRequest('/auth/login/', {
       method: 'POST',
       body: JSON.stringify(credentials),
-    }),
+    });
+  },
   register: (userData: any) => 
-    apiRequest('/auth/register', {
+    apiRequest('/auth/register/', {
       method: 'POST',
       body: JSON.stringify(userData),
     }),
