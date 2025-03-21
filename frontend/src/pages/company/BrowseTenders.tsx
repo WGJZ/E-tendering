@@ -30,6 +30,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { formatDate } from '../../utils/dateUtils';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SubmitBid from '../../components/SubmitBid';
+import { tenderAPI, bidAPI } from '../../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -139,18 +140,14 @@ const BrowseTenders: React.FC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/tenders/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch tenders');
+      try {
+        // Use the centralized API service
+        const data = await tenderAPI.getAllTenders();
+        setTenders(data);
+      } catch (error) {
+        console.error('Error fetching tenders from API:', error);
+        throw error;
       }
-
-      const data = await response.json();
-      setTenders(data);
     } catch (error) {
       console.error('Error fetching tenders:', error);
       setError('Failed to load tenders. Please try again.');
@@ -167,15 +164,9 @@ const BrowseTenders: React.FC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/bids/my-bids/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      try {
+        // Use the centralized API service
+        const data = await bidAPI.getMyBids();
         if (Array.isArray(data)) {
           // Create a map of tender_id to bid status
           const bidMap = data.map((bid: any) => ({
@@ -184,6 +175,8 @@ const BrowseTenders: React.FC = () => {
           }));
           setMyBids(bidMap);
         }
+      } catch (error) {
+        console.error('Error fetching my bids from API:', error);
       }
     } catch (error) {
       console.error('Error fetching my bids:', error);

@@ -12,7 +12,14 @@ import {
   Typography,
   Alert,
   MenuItem,
+  InputAdornment,
+  Paper,
+  Divider,
 } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { tenderAPI } from '../../api/apiService';
 
 /**
  * NewTender Component
@@ -215,75 +222,24 @@ const NewTender = () => {
       };
 
       debugLog('Request data:', requestData);
-      debugLog('Making request to:', 'http://localhost:8000/api/tenders/');
-
-      // First check if the server is responding
-      try {
-        const checkResponse = await fetch('http://localhost:8000/api/tenders/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        if (!checkResponse.ok && checkResponse.status !== 401) {  // Allow 401 as we'll handle auth in main request
-          throw new Error(`Server check failed: ${checkResponse.status}`);
-        }
-      } catch (error) {
-        setError('Cannot connect to server. Please ensure the backend server is running.');
-        return;
-      }
-
-      const response = await fetch('http://localhost:8000/api/tenders/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,  // Add token here
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      debugLog('Response status:', response.status);
       
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        if (response.status === 401) {
-          setError('Authentication failed. Please login again.');
-          // Optionally redirect to login page
-          navigate('/login');
-          return;
-        }
-        throw new Error(`Expected JSON response but got ${contentType}`);
-      }
-
-      const responseData = await response.json();
-      debugLog('Response data:', responseData);
-
-      if (response.ok) {
+      try {
+        // Use the centralized API service instead of direct fetch
+        await tenderAPI.createTender(requestData);
         debugLog('Tender creation successful');
         navigate('/city/browse-tender');
-      } else {
-        let errorMessage = 'Unknown error';
-        if (responseData.detail) {
-          errorMessage = responseData.detail;
-        } else if (responseData.message) {
-          errorMessage = responseData.message;
-        } else if (typeof responseData === 'object') {
-          const errors = Object.entries(responseData)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(', ');
-          errorMessage = `Validation failed: ${errors}`;
+      } catch (error) {
+        debugLog('Tender creation failed:', error);
+        if (error instanceof Error) {
+          setError(`Failed to create tender: ${error.message}`);
+        } else {
+          setError('Failed to create tender: Unknown error');
         }
-        debugLog('Tender creation failed:', errorMessage);
-        setError(`Failed to create tender: ${errorMessage}`);
       }
     } catch (err) {
       debugLog('Error in handleSubmit:', err);
       if (err instanceof Error) {
-        if (err.message.includes('Expected JSON response')) {
-          setError('Server error: Backend may not be running or token may have expired. Please try logging in again.');
-        } else {
-          setError(`Network error: ${err.message}`);
-        }
+        setError(`Error: ${err.message}`);
       } else {
         setError('An unexpected error occurred');
       }

@@ -30,6 +30,7 @@ import { formatDate } from '../../utils/dateUtils';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { Tender } from '../../types/Tender';
+import { tenderAPI } from '../../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -168,28 +169,18 @@ export default function ModifyTender({ open, onClose, tender }: ModifyTenderProp
 
       console.log('Sending request body:', requestBody);
 
-      const response = await fetch(`http://localhost:8000/api/tenders/${tender.id}/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Server error response:', errorData);
-        throw new Error(`Failed to update tender: ${JSON.stringify(errorData)}`);
+      try {
+        // Use the centralized API service
+        await tenderAPI.updateTender(tender.id, requestBody);
+        console.log('Update successful');
+        setSuccess('Tender updated successfully');
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      } catch (error) {
+        console.error('Error from API service:', error);
+        setError('Failed to update tender. Please try again.');
       }
-
-      const updatedTender = await response.json();
-      console.log('Update successful:', updatedTender);
-
-      setSuccess('Tender updated successfully');
-      setTimeout(() => {
-        onClose();
-      }, 2000);
     } catch (err) {
       console.error('Error updating tender:', err);
       setError('Failed to update tender. Please try again.');
