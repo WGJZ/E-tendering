@@ -1,0 +1,28 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+
+# Django
+media/
+staticfiles/
+
+# React
+build/
+
+# IDE
+.idea/
+.vscode/
+
+# OS specific
+.DS_Store
+Thumbs.db 
