@@ -135,7 +135,9 @@ CORS_ALLOWED_ORIGINS = [
 
 # Add deployed frontend URL if available
 if os.getenv('FRONTEND_URL'):
-    CORS_ALLOWED_ORIGINS.append(os.getenv('FRONTEND_URL'))
+    # Remove any trailing slash to avoid CORS errors
+    frontend_url = os.getenv('FRONTEND_URL').rstrip('/')
+    CORS_ALLOWED_ORIGINS.append(frontend_url)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
