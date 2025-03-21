@@ -31,5 +31,4 @@ services:
 
   - type: pserv
     name: e-tendering-db
-    ipAllowList: []
     plan: free 
