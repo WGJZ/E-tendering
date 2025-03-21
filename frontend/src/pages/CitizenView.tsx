@@ -32,6 +32,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import InfoIcon from '@mui/icons-material/Info';
+import { API_BASE_URL, getApiUrl } from '../api/config';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -152,12 +153,12 @@ const CitizenView: React.FC = () => {
       // First try the authenticated endpoint if we have a token
       let response;
       if (token) {
-        response = await fetch('http://localhost:8000/api/tenders/', {
+        response = await fetch(getApiUrl('/tenders'), {
           headers
         });
       } else {
         // As a fallback, try the regular endpoint with a guest token if possible
-        response = await fetch('http://localhost:8000/api/tenders/', {
+        response = await fetch(getApiUrl('/tenders'), {
           headers: {
             'x-guest-access': 'true'
           }
@@ -368,40 +369,37 @@ const CitizenView: React.FC = () => {
   const fetchWinnerInfo = async (tenderId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const headers: HeadersInit = {};
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
       
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      // 尝试从不同的API端点获取获奖者信息
-      const response = await fetch(`http://localhost:8000/api/tenders/${tenderId}/bids/`, {
+      const response = await fetch(getApiUrl(`/tenders/${tenderId}/bids`), {
         headers
       });
       
-      if (response.ok) {
-        const bids = await response.json();
-        console.log('Fetched bids for tender:', bids);
-        
-        // 查找中标的投标
-        const winningBid = bids.find((bid: any) => bid.is_winner === true);
-        
-        if (winningBid) {
-          console.log('Found winning bid:', winningBid);
-          setSelectedTender(prevTender => {
-            if (!prevTender) return prevTender;
-            return {
-              ...prevTender,
-              winner_name: winningBid.company_name,
-              winning_bid: winningBid.bidding_price.toString()
-            };
-          });
-        }
-      } else {
-        console.log('Could not fetch winner information from API');
+      if (!response.ok) {
+        throw new Error('Failed to fetch bid information');
       }
+      
+      const bids = await response.json();
+      const winningBid = bids.find((bid: any) => bid.is_winner);
+      
+      if (winningBid) {
+        return {
+          winner_id: winningBid.company_id,
+          winner_name: winningBid.company_name,
+          winning_bid: winningBid.bidding_price
+        };
+      }
+      
+      return null;
     } catch (error) {
-      console.error('Error fetching winner information:', error);
+      console.error('Error fetching winner info:', error);
+      return null;
     }
   };
 

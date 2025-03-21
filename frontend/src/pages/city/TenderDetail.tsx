@@ -24,6 +24,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { formatDate } from '../../utils/dateUtils';
 import DescriptionIcon from '@mui/icons-material/Description';
 import BusinessIcon from '@mui/icons-material/Business';
+import { tenderAPI, bidAPI } from '../../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -133,32 +134,12 @@ const TenderDetail: React.FC = () => {
           return;
         }
 
-        // Fetch tender details
-        const tenderResponse = await fetch(`http://localhost:8000/api/tenders/${tenderId}/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!tenderResponse.ok) {
-          throw new Error('Failed to fetch tender details');
-        }
-
-        const tenderData = await tenderResponse.json();
+        // Fetch tender details using the API service
+        const tenderData = await tenderAPI.getTenderById(tenderId as string);
         setTender(tenderData);
 
-        // Fetch bids for this tender
-        const bidsResponse = await fetch(`http://localhost:8000/api/tenders/${tenderId}/bids/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!bidsResponse.ok) {
-          throw new Error('Failed to fetch bids for this tender');
-        }
-
-        const bidsData = await bidsResponse.json();
+        // Fetch bids for this tender using the API service
+        const bidsData = await bidAPI.getTenderBids(tenderId as string);
         console.log('Bids data:', bidsData);
         setBids(bidsData);
       } catch (error) {
@@ -187,17 +168,7 @@ const TenderDetail: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:8000/api/bids/${selectedBid.id}/select_winner/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to select winner');
-      }
+      await bidAPI.selectWinner(selectedBid.id);
 
       // Update local state
       setBids(prev => prev.map(bid => ({

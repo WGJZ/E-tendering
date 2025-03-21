@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { Tender } from '../../types/Tender';
+import { tenderAPI, bidAPI } from '../../api/apiService';
 
 // 替换 PageContainer 和 ContentWrapper 为自定义样式组件
 const PageContainer = styled('div')({
@@ -102,22 +103,10 @@ export default function TenderDetail() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/tenders/${tenderId}/bids/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          amount: Number(bidAmount),
-          tender_id: Number(tenderId)
-        })
+      await bidAPI.submitBid({
+        amount: Number(bidAmount),
+        tender_id: Number(tenderId)
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to submit bid');
-      }
 
       setSuccess('Bid submitted successfully');
       setHasExistingBid(true);

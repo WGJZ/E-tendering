@@ -23,6 +23,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { formatDate } from '../utils/dateUtils';
 import DescriptionIcon from '@mui/icons-material/Description';
 import BusinessIcon from '@mui/icons-material/Business';
+import { tenderAPI, publicAPI, bidAPI } from '../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -128,39 +129,29 @@ const TenderDetail: React.FC = () => {
   const fetchTenderAndBids = async () => {
     try {
       setLoading(true);
-      let headers = {};
       const token = localStorage.getItem('token');
-      
+
+      // Determine if we should use authenticated or public API
+      let tenderData;
       if (token) {
-        headers = {
-          'Authorization': `Bearer ${token}`,
-        };
+        // Authenticated request
+        tenderData = await tenderAPI.getTenderById(tenderId as string);
+      } else {
+        // Public request
+        tenderData = await publicAPI.getPublicTenderDetails(tenderId as string);
       }
-
-      // Determine the endpoint based on user authentication
-      const tenderEndpoint = token
-        ? `http://localhost:8000/api/tenders/${tenderId}/`
-        : `http://localhost:8000/api/tenders/public/${tenderId}/`;
-
-      // Fetch tender details
-      const tenderResponse = await fetch(tenderEndpoint, { headers });
-
-      if (!tenderResponse.ok) {
-        throw new Error('Failed to fetch tender details');
-      }
-
-      const tenderData = await tenderResponse.json();
+      
       setTender(tenderData);
 
       // Only fetch bids if user is authenticated
       if (token) {
-        // Fetch bids for this tender
-        const bidsEndpoint = `http://localhost:8000/api/tenders/${tenderId}/bids/`;
-        const bidsResponse = await fetch(bidsEndpoint, { headers });
-
-        if (bidsResponse.ok) {
-          const bidsData = await bidsResponse.json();
+        try {
+          // Fetch bids for this tender using the bidAPI
+          const bidsData = await bidAPI.getTenderBids(tenderId as string);
           setBids(bidsData);
+        } catch (bidError) {
+          console.error('Error fetching bids:', bidError);
+          // No need to throw here, we can continue without bids
         }
       }
     } catch (error) {

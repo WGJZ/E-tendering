@@ -28,6 +28,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { formatDate } from '../../utils/dateUtils';
 import { deleteTender } from '../../utils/api';
+import { tenderAPI } from '../../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -107,24 +108,10 @@ const BrowseTender = () => {
         return;
       }
       
-      console.log('Fetching tenders with token:', token?.substring(0, 10) + '...');
+      console.log('Fetching tenders...');
       
-      const response = await fetch('http://localhost:8000/api/tenders/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      console.log('Response status:', response.status);
-      
-      if (response.status === 401) {
-        console.error('Authentication failed');
-        return;
-      }
-      
-      if (response.ok) {
-        const data = await response.json();
+      try {
+        const data = await tenderAPI.getAllTenders();
         console.log('Raw API response:', JSON.stringify(data, null, 2));
         
         if (Array.isArray(data)) {
@@ -147,9 +134,8 @@ const BrowseTender = () => {
         } else {
           console.error('Received data is not an array:', data);
         }
-      } else {
-        const errorData = await response.json();
-        console.error('API error:', errorData);
+      } catch (error) {
+        console.error('API error:', error);
       }
     } catch (error) {
       console.error('Error fetching tenders:', error);

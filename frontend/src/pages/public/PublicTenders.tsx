@@ -28,6 +28,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { publicAPI } from '../../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -134,15 +135,10 @@ const PublicTenders: React.FC = () => {
     try {
       setLoading(true);
       
-      // Public API endpoint - no auth required
-      const response = await fetch('http://localhost:8000/api/tenders/public/');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch tenders');
-      }
-
-      const data = await response.json();
+      // Use the public API service
+      const data = await publicAPI.getPublicTenders();
       setTenders(data);
+      setFilteredTenders(data);
     } catch (error) {
       console.error('Error fetching tenders:', error);
       setError('Failed to load tenders. Please try again.');

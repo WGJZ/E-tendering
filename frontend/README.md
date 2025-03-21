@@ -1,46 +1,102 @@
-# Getting Started with Create React App
+# E-Tendering System Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the frontend application for the E-Tendering System.
 
-## Available Scripts
+## Getting Started
 
-In the project directory, you can run:
+### Prerequisites
 
-### `npm start`
+- Node.js (version 18 or later)
+- npm or yarn
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Installation
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+1. Clone the repository
+2. Navigate to the frontend directory
+3. Install dependencies:
 
-### `npm test`
+```bash
+npm install
+# or
+yarn install
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Environment Configuration
 
-### `npm run build`
+Create a `.env.local` file (for local development) or `.env.production` file (for production) with the following variables:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_SUPABASE_URL=your-supabase-url
+REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+For production, replace the API URL with your deployed backend URL.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Running Locally
 
-### `npm run eject`
+```bash
+npm start
+# or
+yarn start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Building for Production
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm run build
+# or
+yarn build
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Deployment to Vercel
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+This frontend application is configured for easy deployment to Vercel.
 
-## Learn More
+### Setup
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. Create an account on [Vercel](https://vercel.com) if you don't have one.
+2. Install the Vercel CLI: `npm install -g vercel`
+3. Login to Vercel: `vercel login`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Environment Variables
+
+Add the following environment variables in the Vercel project settings:
+
+- `REACT_APP_API_URL`: The URL of your deployed backend API (e.g., `https://your-backend.onrender.com/api`)
+- `REACT_APP_SUPABASE_URL`: Your Supabase project URL
+- `REACT_APP_SUPABASE_ANON_KEY`: Your Supabase anon/public key
+
+### Deploy
+
+You can deploy either through the Vercel dashboard by connecting your GitHub repository or using the CLI:
+
+```bash
+vercel
+```
+
+For production deployments:
+
+```bash
+vercel --prod
+```
+
+### Custom Domain
+
+If you have a custom domain, you can configure it in the Vercel project settings under the "Domains" section.
+
+## Features
+
+- User authentication (login/register)
+- Role-based access control (City Officials, Company Representatives, Public)
+- Tender management for city officials
+- Bid submission for companies
+- Public tender viewing
+
+## Technologies Used
+
+- React
+- TypeScript
+- Material-UI
+- React Router
+- Axios for API communication
