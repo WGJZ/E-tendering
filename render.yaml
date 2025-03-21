@@ -29,7 +29,7 @@ services:
       - key: FRONTEND_URL
         sync: false
 
-  - type: postgres
+  - type: pserv
     name: e-tendering-db
     ipAllowList: []
     plan: free 
