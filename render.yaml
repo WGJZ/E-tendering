@@ -29,6 +29,7 @@ services:
       - key: FRONTEND_URL
         sync: false
 
-  - type: pserv
+  - type: postgres
     name: e-tendering-db
-    plan: free 
+    plan: free
+    version: "14" 
