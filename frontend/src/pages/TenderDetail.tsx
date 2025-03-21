@@ -194,23 +194,13 @@ const TenderDetail: React.FC = () => {
     if (!selectedBidId) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/bids/${selectedBidId}/select_winner/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      await bidAPI.selectWinner(selectedBidId);
       
-      if (!response.ok) {
-        throw new Error('Failed to select winner');
-      }
-      
-      // 关闭对话框
+      // Close the dialog
       setSelectWinnerDialogOpen(false);
-      // 显示成功消息
+      // Show success message
       setActionSuccess('Winner selected successfully!');
-      // 重新获取数据
+      // Refresh data
       fetchTenderAndBids();
     } catch (err) {
       console.error('Error selecting winner:', err);

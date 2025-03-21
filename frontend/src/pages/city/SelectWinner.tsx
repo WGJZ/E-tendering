@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../utils/dateUtils';
+import { tenderAPI, bidAPI } from '../../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -84,39 +85,17 @@ const SelectWinner: React.FC = () => {
           return;
         }
 
-        // Fetch all tenders first
-        const response = await fetch('http://localhost:8000/api/tenders/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch tenders');
-        }
-
-        const data = await response.json();
+        // Fetch all tenders using the API service
+        const data = await tenderAPI.getAllTenders();
         
         // For each tender, check if it has bids
         const tendersWithBidInfo = await Promise.all(
           data.map(async (tender: Tender) => {
             try {
-              const bidsResponse = await fetch(`http://localhost:8000/api/tenders/${tender.id}/bids/`, {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                },
-              });
-              
-              if (bidsResponse.ok) {
-                const bidsData = await bidsResponse.json();
-                return {
-                  ...tender,
-                  bids_count: bidsData.length
-                };
-              }
+              const bidsData = await bidAPI.getTenderBids(String(tender.id));
               return {
                 ...tender,
-                bids_count: 0
+                bids_count: bidsData.length
               };
             } catch (error) {
               console.error(`Error fetching bids for tender ${tender.id}:`, error);
@@ -136,12 +115,12 @@ const SelectWinner: React.FC = () => {
         setTenders(tendersWithBids);
       } catch (error) {
         console.error('Error fetching tenders:', error);
-        setError('Failed to load tenders with bids. Please try again.');
+        setError('Failed to load tenders. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchTenders();
   }, [navigate]);
 
