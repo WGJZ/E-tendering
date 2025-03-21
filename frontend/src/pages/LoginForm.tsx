@@ -89,36 +89,46 @@ const LoginForm = () => {
       const uppercaseUserType = userType?.toUpperCase();
       console.log(`User type for API request: ${uppercaseUserType}`);
       
-      const loginData = await authAPI.login({
-        username: formData.username,
-        password: formData.password,
-        user_type: uppercaseUserType
+      // Using the same approach as the successful test function
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://e-tendering-backend.onrender.com/api';
+      const endpoint = `${apiUrl}/auth/login/`;
+      
+      console.log(`Sending direct login request to: ${endpoint}`);
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+          user_type: uppercaseUserType
+        }),
       });
-
-      console.log('Login successful:', loginData);
       
-      localStorage.setItem('token', loginData.token);
-      localStorage.setItem('userType', loginData.user_type || uppercaseUserType);
+      console.log('Login response status:', response.status);
       
-      if (userType === 'city') {
-        navigate('/city');
-      } else if (userType === 'company') {
-        navigate('/company');
+      const loginData = await response.json();
+      console.log('Login response data:', loginData);
+      
+      if (response.ok) {
+        console.log('Login successful:', loginData);
+        
+        localStorage.setItem('token', loginData.token);
+        localStorage.setItem('userType', loginData.user_type || uppercaseUserType);
+        
+        if (userType === 'city') {
+          navigate('/city');
+        } else if (userType === 'company') {
+          navigate('/company');
+        }
+      } else {
+        setError(loginData.message || 'Login failed. Please check your credentials and try again.');
       }
     } catch (error: any) {
       console.error('Error:', error);
-      // Try to extract the error message from the error object
-      let errorMessage = 'Login failed. Please check your credentials and try again.';
-      
-      if (error.message) {
-        if (error.message.includes('API request failed')) {
-          errorMessage = error.message;
-        } else if (error.message.includes('Unauthorized')) {
-          errorMessage = 'Invalid username or password. Please try again.';
-        }
-      }
-      
-      setError(errorMessage);
+      setError('Login failed. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +166,20 @@ const LoginForm = () => {
       console.log('Response data:', data);
       
       if (response.ok) {
-        setError('Direct API call successful. Check console for details.');
+        // Save the token from successful login
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userType', data.user_type || userType?.toUpperCase());
+        
+        setError('Direct API call successful. Login successful!');
+        
+        // Navigate to the appropriate route
+        setTimeout(() => {
+          if (userType === 'city') {
+            navigate('/city');
+          } else if (userType === 'company') {
+            navigate('/company');
+          }
+        }, 1000);
       } else {
         setError(`Direct API call failed: ${data.message || JSON.stringify(data)}`);
       }

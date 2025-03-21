@@ -92,12 +92,30 @@ export const publicAPI = {
  * Authentication API endpoints
  */
 export const authAPI = {
-  login: (credentials: LoginCredentials) => {
+  login: async (credentials: LoginCredentials) => {
     console.log('Login request payload:', credentials);
-    return apiRequest('/auth/login/', {
+    
+    // Use a direct fetch for login to avoid the apiRequest processing
+    const url = getApiUrl('/auth/login/');
+    console.log(`Sending direct login POST request to: ${url}`);
+    
+    const response = await fetch(url, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(credentials),
     });
+    
+    console.log('Login response status:', response.status);
+    const data = await response.json();
+    console.log('Login response data:', data);
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
+    }
+    
+    return data;
   },
   register: (userData: any) => 
     apiRequest('/auth/register/', {
