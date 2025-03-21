@@ -4,6 +4,12 @@ interface RequestOptions extends RequestInit {
   token?: string;
 }
 
+interface LoginCredentials {
+  username: string;
+  password: string;
+  user_type?: string;
+}
+
 /**
  * Centralized function to make API requests
  */
@@ -75,7 +81,7 @@ export const publicAPI = {
  * Authentication API endpoints
  */
 export const authAPI = {
-  login: (credentials: { username: string; password: string }) => 
+  login: (credentials: LoginCredentials) => 
     apiRequest('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),

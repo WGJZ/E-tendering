@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom';
 import { Box, styled, TextField, Typography, Link } from '@mui/material';
+import { authAPI } from '../api/apiService';
 
 // create a custom button container
 const StyledButtonContainer = styled(Box)(({ theme }) => ({
@@ -79,34 +80,26 @@ const LoginForm = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/auth/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-          user_type: userType?.toUpperCase()
-        }),
+      console.log(`Attempting to login as ${userType} with username: ${formData.username}`);
+      
+      const loginData = await authAPI.login({
+        username: formData.username,
+        password: formData.password,
+        user_type: userType?.toUpperCase()
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userType', data.user_type);
-        if (userType === 'city') {
-          navigate('/city');
-        } else if (userType === 'company') {
-          navigate('/company');
-        }
-      } else {
-        setError(data.message || 'Login failed. Please try again.');
+      console.log('Login successful:', loginData);
+      
+      localStorage.setItem('token', loginData.token);
+      localStorage.setItem('userType', loginData.user_type);
+      if (userType === 'city') {
+        navigate('/city');
+      } else if (userType === 'company') {
+        navigate('/company');
       }
     } catch (error) {
       console.error('Error:', error);
-      setError('Network error. Please try again.');
+      setError('Login failed. Please check your credentials and try again.');
     }
   };
 

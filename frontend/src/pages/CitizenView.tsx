@@ -33,6 +33,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import InfoIcon from '@mui/icons-material/Info';
 import { API_BASE_URL, getApiUrl } from '../api/config';
+import { publicAPI } from '../api/apiService';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -141,47 +142,28 @@ const CitizenView: React.FC = () => {
   const fetchTenders = async () => {
     try {
       setLoading(true);
+      console.log('Fetching public tenders...');
       
-      // Try to get a token - for testing purposes
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = {};
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      // First try the authenticated endpoint if we have a token
-      let response;
-      if (token) {
-        response = await fetch(getApiUrl('/tenders'), {
-          headers
-        });
-      } else {
-        // As a fallback, try the regular endpoint with a guest token if possible
-        response = await fetch(getApiUrl('/tenders'), {
-          headers: {
-            'x-guest-access': 'true'
-          }
-        });
-      }
-      
-      if (!response.ok) {
-        // If both approaches fail, load sample data as fallback
-        console.error('API requests failed, using sample data');
+      try {
+        // Use the public API service which doesn't require authentication
+        const data = await publicAPI.getPublicTenders();
+        console.log('Fetched tenders:', data);
+        setTenders(data);
+        setFilteredTenders(data);
+      } catch (apiError) {
+        console.error('API requests failed, using sample data', apiError);
+        // Load sample data when API fails
         const sampleData = getSampleTenders();
         setTenders(sampleData);
-        return;
+        setFilteredTenders(sampleData);
       }
-
-      const data = await response.json();
-      console.log('Fetched tenders:', data);
-      setTenders(data);
     } catch (error) {
       console.error('Error fetching tenders:', error);
       setError('Failed to load tenders. Using sample data instead.');
       // Load sample data when API fails
       const sampleData = getSampleTenders();
       setTenders(sampleData);
+      setFilteredTenders(sampleData);
     } finally {
       setLoading(false);
     }
