@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'tender_app',
     'rest_framework_simplejwt',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
