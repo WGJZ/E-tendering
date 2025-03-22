@@ -216,8 +216,8 @@ const NewTender = () => {
         notice_date: formData.notice_date ? new Date(formData.notice_date).toISOString() : null,
         submission_deadline: formData.close_date ? new Date(formData.close_date).toISOString() : null,
         winner_date: formData.winner_date ? new Date(formData.winner_date).toISOString() : null,
-        construction_start: formData.construction_start || null,
-        construction_end: formData.construction_end || null,
+        construction_start: formData.construction_start ? new Date(formData.construction_start + 'T00:00:00').toISOString() : null,
+        construction_end: formData.construction_end ? new Date(formData.construction_end + 'T00:00:00').toISOString() : null,
         created_by: userId
       };
 
@@ -306,8 +306,25 @@ const NewTender = () => {
    */
   const formatDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return '';
-    const date = new Date(dateTimeStr);
-    return date.toLocaleString();
+    
+    try {
+      // For date-only strings (like construction_start and construction_end), add time component
+      if (dateTimeStr.length === 10 && dateTimeStr.includes('-')) {
+        dateTimeStr = dateTimeStr + 'T00:00:00';
+      }
+      
+      const date = new Date(dateTimeStr);
+      
+      // Verify date is valid before formatting
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      return date.toLocaleString();
+    } catch (error) {
+      debugLog('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   return (
