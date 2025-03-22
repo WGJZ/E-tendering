@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button, Alert, Typography, CircularProgress } from '@mui/material';
 
 interface SubmitBidProps {
-  tenderId: number;
+  tenderId: string;
   onBidSubmitted?: () => void;
 }
 
 interface Bid {
-  id: number;
-  tender_id: number;
+  id: string;
+  tender_id: string;
   company: number;
   bidding_price: string;
   status: string;
@@ -45,7 +45,7 @@ export default function SubmitBid({ tenderId, onBidSubmitted }: SubmitBidProps) 
         const bids: Bid[] = await response.json();
         console.log('Retrieved bids:', bids);
         
-        const existingBid = bids.find((bid: Bid) => Number(bid.tender_id) === Number(tenderId));
+        const existingBid = bids.find((bid: Bid) => bid.tender_id === tenderId);
         console.log('Checking for tender:', tenderId, 'Found bid:', existingBid);
         
         setHasBid(!!existingBid);

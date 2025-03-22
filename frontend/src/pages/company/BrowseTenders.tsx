@@ -74,7 +74,7 @@ const ImageContainer = styled('div')({
 });
 
 interface Tender {
-  id: number;
+  id: string;
   title: string;
   budget: string;
   category: string;
@@ -86,7 +86,7 @@ interface Tender {
 }
 
 interface MyBid {
-  tender_id: number;
+  tender_id: string;
   status: string;
 }
 
@@ -200,7 +200,7 @@ const BrowseTenders: React.FC = () => {
     if (search) {
       filtered = filtered.filter(tender =>
         tender.title.toLowerCase().includes(search.toLowerCase()) ||
-        tender.id.toString().includes(search.toLowerCase()) ||
+        tender.id.includes(search.toLowerCase()) ||
         tender.description.toLowerCase().includes(search.toLowerCase())
       );
     }
@@ -212,15 +212,15 @@ const BrowseTenders: React.FC = () => {
     applyFilters(tenders, searchTerm, selectedCategory, showOnlyOpenTenders);
   }, [searchTerm, selectedCategory, showOnlyOpenTenders, tenders]);
 
-  const handleViewDetails = (tenderId: number) => {
+  const handleViewDetails = (tenderId: string) => {
     navigate(`/company/submit-bid/${tenderId}`);
   };
 
-  const hasBidForTender = (tenderId: number): boolean => {
+  const hasBidForTender = (tenderId: string): boolean => {
     return myBids.some(bid => bid.tender_id === tenderId);
   };
 
-  const getBidStatusForTender = (tenderId: number): string | null => {
+  const getBidStatusForTender = (tenderId: string): string | null => {
     const bid = myBids.find(bid => bid.tender_id === tenderId);
     return bid ? bid.status : null;
   };
@@ -229,7 +229,7 @@ const BrowseTenders: React.FC = () => {
     return new Date(deadline) < new Date();
   };
 
-  const viewTenderDetails = (tenderId: number) => {
+  const viewTenderDetails = (tenderId: string) => {
     navigate(`/tenders/${tenderId}`);
   };
 

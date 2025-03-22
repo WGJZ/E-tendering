@@ -168,10 +168,11 @@ export default function ModifyTender({ open, onClose, tender }: ModifyTenderProp
       };
 
       console.log('Sending request body:', requestBody);
+      console.log('Tender ID (before conversion):', tender.id, 'Type:', typeof tender.id);
 
       try {
-        // Use the centralized API service
-        await tenderAPI.updateTender(tender.id, requestBody);
+        // Use the centralized API service with explicit String conversion
+        await tenderAPI.updateTender(String(tender.id), requestBody);
         console.log('Update successful');
         setSuccess('Tender updated successfully');
         setTimeout(() => {
