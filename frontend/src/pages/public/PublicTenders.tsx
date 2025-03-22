@@ -164,7 +164,7 @@ const PublicTenders: React.FC = () => {
     if (search) {
       filtered = filtered.filter(tender =>
         tender.title.toLowerCase().includes(search.toLowerCase()) ||
-        tender.id.toLowerCase().includes(search.toLowerCase()) ||
+        String(tender.id).toLowerCase().includes(search.toLowerCase()) ||
         tender.description.toLowerCase().includes(search.toLowerCase())
       );
     }
@@ -181,7 +181,7 @@ const PublicTenders: React.FC = () => {
   };
 
   const handleViewDetails = (tender: Tender) => {
-    navigate(`/tenders/${tender.id}`);
+    navigate(`/tenders/${String(tender.id)}`);
   };
 
   const handleLogin = (userType: string) => {
