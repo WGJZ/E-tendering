@@ -267,6 +267,7 @@ const NewTender = () => {
     }
     
     const now = new Date();
+    const minValidYear = 2023; // Minimum valid year for dates
     
     if (formData.notice_date && new Date(formData.notice_date) < now) {
       setError('Notice date must be in the future');
@@ -281,6 +282,24 @@ const NewTender = () => {
     if (formData.winner_date && new Date(formData.winner_date) < new Date(formData.close_date)) {
       setError('Winner announcement date must be after close date');
       return false;
+    }
+    
+    // Validate construction start date has a valid year
+    if (formData.construction_start) {
+      const startYear = new Date(formData.construction_start + 'T00:00:00').getFullYear();
+      if (startYear < minValidYear || startYear > 2100) {
+        setError(`Construction start date must have a valid year between ${minValidYear} and 2100`);
+        return false;
+      }
+    }
+    
+    // Validate construction end date has a valid year
+    if (formData.construction_end) {
+      const endYear = new Date(formData.construction_end + 'T00:00:00').getFullYear();
+      if (endYear < minValidYear || endYear > 2100) {
+        setError(`Construction end date must have a valid year between ${minValidYear} and 2100`);
+        return false;
+      }
     }
     
     if (formData.construction_start && formData.construction_end && 
@@ -430,7 +449,16 @@ const NewTender = () => {
               onChange={(e) => {
                 const date = e.target.value;
                 debugLog('Construction start date:', date);
+                
+                // Basic validation to ensure year is reasonable
+                const year = parseInt(date.split('-')[0]);
+                if (year < 2023 || year > 2100) {
+                  setError(`Please enter a valid year between 2023 and 2100`);
+                  return;
+                }
+                
                 setFormData({ ...formData, construction_start: date });
+                setError(''); // Clear error if valid
               }}
               InputLabelProps={{
                 shrink: true,
@@ -438,6 +466,7 @@ const NewTender = () => {
               // Add placeholder to show expected format
               placeholder="YYYY-MM-DD"
               required
+              inputProps={{ min: "2023-01-01", max: "2100-12-31" }}
             />
             
             <StyledTextField
@@ -448,7 +477,16 @@ const NewTender = () => {
               onChange={(e) => {
                 const date = e.target.value;
                 debugLog('Construction end date:', date);
+                
+                // Basic validation to ensure year is reasonable
+                const year = parseInt(date.split('-')[0]);
+                if (year < 2023 || year > 2100) {
+                  setError(`Please enter a valid year between 2023 and 2100`);
+                  return;
+                }
+                
                 setFormData({ ...formData, construction_end: date });
+                setError(''); // Clear error if valid
               }}
               InputLabelProps={{
                 shrink: true,
@@ -456,6 +494,7 @@ const NewTender = () => {
               // Add placeholder to show expected format
               placeholder="YYYY-MM-DD"
               required
+              inputProps={{ min: "2023-01-01", max: "2100-12-31" }}
             />
           </Box>
 

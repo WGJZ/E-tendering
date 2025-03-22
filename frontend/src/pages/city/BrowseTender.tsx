@@ -23,12 +23,14 @@ import {
   DialogActions,
   Button,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { formatDate } from '../../utils/dateUtils';
 import { deleteTender } from '../../utils/api';
 import { tenderAPI } from '../../api/apiService';
+import { useNavigate } from 'react-router-dom';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -53,6 +55,13 @@ const SearchContainer = styled(Box)({
   gap: '1rem',
   marginBottom: '2rem',
   alignItems: 'center',
+});
+
+const HeaderSection = styled(Box)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '2rem',
 });
 
 interface Tender {
@@ -80,14 +89,19 @@ const CATEGORY_DISPLAY_NAMES: { [key: string]: string } = {
 };
 
 const BrowseTender = () => {
+  const navigate = useNavigate();
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [filteredTenders, setFilteredTenders] = useState<Tender[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [showOnlyOpenTenders, setShowOnlyOpenTenders] = useState<boolean>(false);
+  const [selectedTender, setSelectedTender] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
   const [userRole, setUserRole] = useState<string>('CITY'); // Default to CITY to enable delete
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedTenderId, setSelectedTenderId] = useState<string>('');
-  const [error, setError] = useState<string>('');
   const [deleteSuccess, setDeleteSuccess] = useState<boolean>(false);
   const [categories] = useState<string[]>([
     'CONSTRUCTION',
@@ -105,40 +119,67 @@ const BrowseTender = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         console.error('No authentication token found');
+        setError('Authentication required. Please log in again.');
         return;
       }
       
       console.log('Fetching tenders...');
+      setLoading(true);
       
       try {
         const data = await tenderAPI.getAllTenders();
-        console.log('Raw API response:', JSON.stringify(data, null, 2));
+        console.log('Raw API response:', data);
         
         if (Array.isArray(data)) {
-          const mappedData = data.map(item => ({
-            tender_id: item.id.toString(),
-            title: item.title || '',
-            description: item.description || '',
-            budget: item.budget || '0',
-            notice_date: item.notice_date || '',
-            close_date: item.submission_deadline || '',
-            winner_date: item.winner_date || '',
-            status: item.status || 'PENDING',
-            category: item.category || 'General',
-            created_by: item.created_by
-          }));
+          if (data.length === 0) {
+            console.log('No tenders found in the database');
+          }
+          
+          const mappedData = data.map(item => {
+            console.log('Processing tender item:', item);
+            
+            // Convert ID to string if needed
+            const tenderId = item.id ? String(item.id) : '';
+            
+            return {
+              tender_id: tenderId,
+              title: item.title || '',
+              description: item.description || '',
+              budget: item.budget || '0',
+              notice_date: item.notice_date || '',
+              close_date: item.submission_deadline || '',
+              winner_date: item.winner_date || '',
+              status: item.status || 'PENDING',
+              category: item.category || 'General',
+              created_by: item.created_by
+            };
+          });
           
           console.log('Mapped tender data:', mappedData);
           setTenders(mappedData);
           setFilteredTenders(mappedData);
         } else {
           console.error('Received data is not an array:', data);
+          setError('Invalid data format received from server');
         }
       } catch (error) {
         console.error('API error:', error);
+        if (error instanceof Error) {
+          setError(`Failed to load tenders: ${error.message}`);
+        } else {
+          setError('Failed to load tenders. Please try again.');
+        }
+      } finally {
+        setLoading(false);
       }
     } catch (error) {
-      console.error('Error fetching tenders:', error);
+      console.error('Error in fetchTenders:', error);
+      setLoading(false);
+      if (error instanceof Error) {
+        setError(`Error: ${error.message}`);
+      } else {
+        setError('An unexpected error occurred');
+      }
     }
   };
 
@@ -212,9 +253,20 @@ const BrowseTender = () => {
   return (
     <PageContainer>
       <ContentWrapper>
-        <Typography variant="h4" sx={{ mb: 4, color: '#000', fontFamily: 'Outfit', fontWeight: 300 }}>
-          Browse Tenders ({filteredTenders.length})
-        </Typography>
+        <HeaderSection>
+          <Typography variant="h4" sx={{ color: '#000', fontFamily: 'Outfit', fontWeight: 300 }}>
+            Browse Tenders
+          </Typography>
+          
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={() => navigate('/city/new-tender')}
+            sx={{ fontFamily: 'Outfit' }}
+          >
+            New Tender
+          </Button>
+        </HeaderSection>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -260,53 +312,59 @@ const BrowseTender = () => {
           </FormControl>
         </SearchContainer>
 
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Tender ID</TableCell>
-                <TableCell>Title</TableCell>
-                <TableCell>Notice Date</TableCell>
-                <TableCell>Close Date</TableCell>
-                <TableCell>Winner Date</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Category</TableCell>
-                {userRole === 'CITY' && <TableCell>Actions</TableCell>}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredTenders.map((tender) => (
-                <TableRow key={tender.tender_id}>
-                  <TableCell>{tender.tender_id}</TableCell>
-                  <TableCell>{tender.title}</TableCell>
-                  <TableCell>{formatDate(tender.notice_date)}</TableCell>
-                  <TableCell>{formatDate(tender.close_date)}</TableCell>
-                  <TableCell>{formatDate(tender.winner_date)}</TableCell>
-                  <TableCell>{tender.status}</TableCell>
-                  <TableCell>{CATEGORY_DISPLAY_NAMES[tender.category] || tender.category}</TableCell>
-                  {userRole === 'CITY' && (
-                    <TableCell>
-                      <IconButton
-                        onClick={() => handleDeleteClick(tender.tender_id)}
-                        color="error"
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-              {filteredTenders.length === 0 && (
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer component={Paper} elevation={0} sx={{ bgcolor: 'transparent' }}>
+            <Table>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={userRole === 'CITY' ? 8 : 7} align="center">
-                    No tenders found
-                  </TableCell>
+                  <TableCell>Tender ID</TableCell>
+                  <TableCell>Title</TableCell>
+                  <TableCell>Notice Date</TableCell>
+                  <TableCell>Close Date</TableCell>
+                  <TableCell>Winner Date</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Category</TableCell>
+                  {userRole === 'CITY' && <TableCell>Actions</TableCell>}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {filteredTenders.map((tender) => (
+                  <TableRow key={tender.tender_id}>
+                    <TableCell>{tender.tender_id}</TableCell>
+                    <TableCell>{tender.title}</TableCell>
+                    <TableCell>{formatDate(tender.notice_date)}</TableCell>
+                    <TableCell>{formatDate(tender.close_date)}</TableCell>
+                    <TableCell>{formatDate(tender.winner_date)}</TableCell>
+                    <TableCell>{tender.status}</TableCell>
+                    <TableCell>{CATEGORY_DISPLAY_NAMES[tender.category] || tender.category}</TableCell>
+                    {userRole === 'CITY' && (
+                      <TableCell>
+                        <IconButton
+                          onClick={() => handleDeleteClick(tender.tender_id)}
+                          color="error"
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+                {filteredTenders.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={userRole === 'CITY' ? 8 : 7} align="center">
+                      No tenders found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         <Dialog
           open={deleteConfirmOpen}
