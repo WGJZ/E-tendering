@@ -24,17 +24,37 @@ export const apiRequest = async (endpoint: string, options: RequestOptions = {})
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+    console.log('Using provided token for authorization');
   } else {
     // Try to get token from localStorage
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       headers['Authorization'] = `Bearer ${storedToken}`;
+      console.log('Using token from localStorage');
+      
+      // Debug token info
+      try {
+        const tokenParts = storedToken.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('Token payload:', {
+            user_id: payload.user_id,
+            exp: new Date(payload.exp * 1000).toISOString(),
+            token_type: payload.token_type,
+          });
+        }
+      } catch (e) {
+        console.error('Error parsing token:', e);
+      }
+    } else {
+      console.warn('No token found for API request');
     }
   }
 
   try {
     const url = getApiUrl(endpoint);
     console.log(`Full request URL: ${url}`);
+    console.log('Request headers:', headers);
     
     const response = await fetch(url, {
       ...fetchOptions,
@@ -42,6 +62,13 @@ export const apiRequest = async (endpoint: string, options: RequestOptions = {})
     });
 
     console.log(`Response status: ${response.status}`);
+    
+    // For debugging, log response headers
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+    console.log('Response headers:', responseHeaders);
 
     // For login endpoint, handle 401 differently to show the exact error from backend
     if (endpoint.includes('/auth/login/') && response.status === 401) {
@@ -67,6 +94,7 @@ export const apiRequest = async (endpoint: string, options: RequestOptions = {})
     }
 
     const data = await response.json();
+    console.log(`API response data:`, data);
     
     if (!response.ok) {
       console.error(`API error ${response.status}: ${JSON.stringify(data)}`);

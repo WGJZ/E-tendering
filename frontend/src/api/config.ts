@@ -4,6 +4,11 @@ export const STORAGE_URL = process.env.REACT_APP_SUPABASE_URL + '/storage/v1/obj
 
 // Log the API URL being used
 console.log('Using API URL:', API_BASE_URL);
+console.log('Environment variables:', {
+  REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+  REACT_APP_SUPABASE_URL: process.env.REACT_APP_SUPABASE_URL,
+  REACT_APP_SUPABASE_ANON_KEY: process.env.REACT_APP_SUPABASE_ANON_KEY ? 'Present' : 'Missing',
+});
 
 // Helper function to build API URLs
 export const getApiUrl = (endpoint: string): string => {
