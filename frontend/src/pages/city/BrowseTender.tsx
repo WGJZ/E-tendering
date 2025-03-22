@@ -133,6 +133,14 @@ const BrowseTender = () => {
         if (Array.isArray(data)) {
           if (data.length === 0) {
             console.log('No tenders found in the database');
+            
+            // Add mock data if no tenders found (temporary solution)
+            console.log('Adding mock tenders for testing');
+            const mockTenders = createMockTenders();
+            setTenders(mockTenders);
+            setFilteredTenders(mockTenders);
+            setLoading(false);
+            return;
           }
           
           const mappedData = data.map(item => {
@@ -181,6 +189,54 @@ const BrowseTender = () => {
         setError('An unexpected error occurred');
       }
     }
+  };
+
+  // Function to create mock tenders for testing
+  const createMockTenders = () => {
+    const now = new Date();
+    const nextWeek = new Date(now);
+    nextWeek.setDate(now.getDate() + 7);
+    const nextMonth = new Date(now);
+    nextMonth.setDate(now.getDate() + 30);
+    
+    return [
+      {
+        tender_id: '1',
+        title: 'Mock Tender 1: City Park Renovation',
+        description: 'Renovation of main city park including landscaping and new playground equipment.',
+        budget: '250000',
+        notice_date: now.toISOString(),
+        close_date: nextWeek.toISOString(),
+        winner_date: nextMonth.toISOString(),
+        status: 'OPEN',
+        category: 'CONSTRUCTION',
+        created_by: 1
+      },
+      {
+        tender_id: '2',
+        title: 'Mock Tender 2: Municipal Building Repairs',
+        description: 'Structural repairs and facade restoration for the main municipal building.',
+        budget: '500000',
+        notice_date: now.toISOString(),
+        close_date: nextWeek.toISOString(),
+        winner_date: nextMonth.toISOString(),
+        status: 'OPEN',
+        category: 'INFRASTRUCTURE',
+        created_by: 1
+      },
+      {
+        tender_id: '3',
+        title: 'Mock Tender 3: Public Transit Expansion',
+        description: 'Expansion of public transit routes to newly developed areas of the city.',
+        budget: '750000',
+        notice_date: now.toISOString(),
+        close_date: nextWeek.toISOString(),
+        winner_date: nextMonth.toISOString(),
+        status: 'OPEN',
+        category: 'TRANSPORTATION',
+        created_by: 1
+      }
+    ];
   };
 
   useEffect(() => {

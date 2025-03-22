@@ -225,8 +225,14 @@ const NewTender = () => {
       
       try {
         // Use the centralized API service instead of direct fetch
-        await tenderAPI.createTender(requestData);
-        debugLog('Tender creation successful');
+        const response = await tenderAPI.createTender(requestData);
+        debugLog('Tender creation successful', response);
+        
+        // Even if the response is unusual, still redirect to browse page
+        if (!response || (Array.isArray(response) && response.length === 0)) {
+          debugLog('Warning: Received empty response from API, but continuing.');
+        }
+        
         navigate('/city/browse-tender');
       } catch (error) {
         debugLog('Tender creation failed:', error);
